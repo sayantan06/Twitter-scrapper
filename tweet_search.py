@@ -96,10 +96,9 @@ for tweet in tweets:
         users = follow_user(follows,tweet_tokens)
         if users == '2' or users == '1':
             users ='@'+tweet.user.screen_name
-    try:
-        ','.join(users)
-    except:
-        pass
+    
+    if type(users) is list:
+        users =','.join(users)
             
     #entering data 
     data.append([tweet.user.screen_name,
@@ -114,15 +113,12 @@ for tweet in tweets:
 
 dataframe = p.DataFrame(data, columns= columns)
 dataframe.to_csv('tweet1_data.csv')
-    
-import csv, mysql.connector
 
-mydb = mysql.connector.connect(host = 'localhost', user = 'root', password ='', database = 'twitter')
+from pandas.io import sql
+from sqlalchemy import create_engine
 
-cursor = mydb.cursor()
-csv_data=csv.reader(open('tweet1_data.csv',encoding='utf8'))
-for d in csv_data:
-    cursor.execute('insert into twitter_data(users,Hashtags,likes,Retweet,Follow,Tag,Link,time) values(%s,%s,%s,%s,%s,%s,%s,%s)',d)
-
-mydb.commit()
-cursor.close()
+engine = create_engine("mysql+pymysql://root:@localhost/twitter"
+                       .format(user="root",
+                               pw="",
+                               db="twitter"))
+dataframe.to_sql(con=engine, name='twitter_data', if_exists='replace')
